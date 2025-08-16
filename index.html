@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quick Quiz</title>
+  <meta name="description" content="A simple, modern quiz website in a single file. Edit the questions below to make it your own." />
+  <style>
+    /* =============================
+       Quick Quiz – Single‑File Site
+       Modern, responsive, accessible
+       ============================= */
+
+    :root {
+      --bg: #0b0b10;
+      --card: #13131a;
+      --muted: #9aa0a6;
+      --text: #e6e6eb;
+      --primary: #4f8cff;   /* blue */
+      --primary-600: #3c74e6;
+      --success: #27c08a;   /* green */
+      --danger: #ff5c5c;    /* red */
+      --warning: #ffb020;   /* amber */
+      --ring: #6ea8ff66;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f6f7fb;
+        --card: #ffffff;
+        --muted: #6b7280;
+        --text: #0b1324;
+        --primary: #2563eb;
+        --primary-600: #1e4fcc;
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --ring: #3b82f633;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 80% -10%, #1b1b28 0%, var(--bg) 60%) fixed;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid #ffffff10;
+      box-shadow: 0 20px 60px #00000040, 0 1px 0 #ffffff05 inset;
+      border-radius: 20px;
+      padding: 28px;
+    }
+
+    header h1 {
+      font-size: clamp(28px, 4vw, 38px);
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+    header p { color: var(--muted); margin: 6px 0 0; }
+
+    .row { display: grid; gap: 18px; }
+    @media (min-width: 800px) { .row { grid-template-columns: 1fr 280px; align-items: start; } }
+
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+      border: 1px solid #ffffff17;
+      background: linear-gradient(180deg, #ffffff08, #00000008);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform .06s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    button:hover { border-color: #ffffff33; }
+    button:active { transform: translateY(1px); }
+    button[disabled] { opacity: .55; cursor: not-allowed; }
+
+    .btn-primary { background: linear-gradient(180deg, var(--primary), var(--primary-600)); border-color: #ffffff00; color: #fff; }
+    .btn-ghost { background: transparent; }
+
+    .progress {
+      height: 10px;
+      background: #ffffff12;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 1px 0 #ffffff1a;
+    }
+    .progress > span {
+      position: absolute; inset: 0; width: 0%; background: linear-gradient(90deg, var(--primary), #7dd3fc); border-radius: 999px; transition: width .4s ease;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--muted); background: #ffffff0d; padding: 6px 10px; border-radius: 100px; border: 1px solid #ffffff14;
+    }
+
+    .question {
+      font-size: clamp(18px, 3vw, 22px);
+      margin: 8px 0 10px;
+      line-height: 1.35;
+    }
+
+    .options { list-style: none; padding: 0; margin: 14px 0 6px; display: grid; gap: 10px; }
+    .option { text-align: left; width: 100%; }
+    .option.correct { border-color: #18d69e55; box-shadow: 0 0 0 3px var(--ring); }
+    .option.wrong { border-color: #ff676755; }
+
+    .muted { color: var(--muted); }
+
+    .aside { position: sticky; top: 20px; display: grid; gap: 12px; }
+    .stat { display: grid; gap: 8px; padding: 14px; border-radius: 16px; border: 1px dashed #ffffff20; background: #ffffff06; }
+
+    .footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 26px; }
+    .kbd { border: 1px solid #ffffff2a; background: #161622; padding: 2px 6px; border-radius: 6px; font-size: .92em; }
+
+    .visually-hidden { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px,1px,1px,1px); white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="card" aria-labelledby="app-title">
+      <h1 id="app-title">Quick Quiz</h1>
+      <p class="muted">A clean, single‑file quiz website. Click <strong>Start</strong> to play, then edit the questions in the code to make it your own.</p>
+      <div class="controls" style="margin-top:12px">
+        <button id="startBtn" class="btn-primary">▶ Start</button>
+        <button id="restartBtn" class="btn-ghost" disabled>⟲ Restart</button>
+      </div>
+    </header>
+
+    <div class="row" style="margin-top:18px">
+      <section class="card" id="quizCard" aria-live="polite">
+        <div class="badge" style="justify-content: space-between">
+          <span id="qCounter">Question 0 / 0</span>
+          <span>Score: <strong id="score">0</strong></span>
+        </div>
+        <div class="progress" style="margin:12px 0 6px">
+          <span id="progressBar"></span>
+        </div>
+
+        <div id="quizBody" style="min-height: 220px; display: grid; align-content: start; gap: 10px">
+          <p class="muted">Press <span class="kbd">Start</span> to begin.</p>
+        </div>
+
+        <div style="display:flex; justify-content: space-between; gap: 12px; margin-top: 12px">
+          <small class="muted">Tip: you can use <span class="kbd">1–4</span> keys to answer.</small>
+          <button id="nextBtn" class="btn-primary" disabled>Next ▸</button>
+        </div>
+
+        <p id="live" class="visually-hidden" aria-live="polite"></p>
+      </section>
+
+      <aside class="aside">
+        <div class="stat">
+          <div style="display:flex; justify-content: space-between; align-items: baseline">
+            <strong>Best score</strong>
+            <span class="muted" id="bestMeta"></span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px">
+            <div class="progress" style="flex:1; height: 12px"><span id="bestBar"></span></div>
+            <strong id="bestScore">0%</strong>
+          </div>
+          <button id="resetBest" class="btn-ghost" style="width:100%">Reset best</button>
+        </div>
+        <div class="stat">
+          <strong>How to customize</strong>
+          <p class="muted" style="margin:0">Open this file and find <code>const QUESTIONS = [ ... ]</code>. Edit or add your own questions — see the comment above it for the exact format.</p>
+        </div>
+      </aside>
+    </div>
+
+    <p class="footer">Made with vanilla HTML/CSS/JS — no build tools. You can host it for free with GitHub Pages or Netlify.</p>
+  </div>
+
+  <script>
+    "use strict";
+
+    /* =====================================================
+       ADD / EDIT YOUR QUESTIONS HERE
+       -----------------------------------------------------
+       Format: each question is an object with:
+       - text: string (the question)
+       - options: array of 2–6 answer strings
+       - answerIndex: number (0-based index of the correct option)
+
+       Example:
+       {
+         text: "What is 2 + 2?",
+         options: ["3", "4", "22", "2"],
+         answerIndex: 1,
+       }
+    ====================================================== */
+    const QUESTIONS = [
+      {
+        text: "Which HTML tag is used to make a hyperlink?",
+        options: ["<link>", "<a>", "<button>", "<href>"],
+        answerIndex: 1,
+      },
+      {
+        text: "Which planet is known as the Red Planet?",
+        options: ["Mars", "Jupiter", "Venus", "Saturn"],
+        answerIndex: 0,
+      },
+      {
+        text: "In CSS, which property controls the text size?",
+        options: ["font-size", "text-style", "font-weight", "text-size"],
+        answerIndex: 0,
+      },
+      {
+        text: "What does HTTP stand for?",
+        options: [
+          "HyperText Transfer Protocol",
+          "High Transfer Text Pipeline",
+          "Hyperlink Transfer Process",
+          "Host Transport Text Protocol",
+        ],
+        answerIndex: 0,
+      },
+      {
+        text: "Which language runs in a web browser?",
+        options: ["Python", "C++", "JavaScript", "Java"],
+        answerIndex: 2,
+      },
+      {
+        text: "Which of these is a prime number?",
+        options: ["21", "27", "29", "33"],
+        answerIndex: 2,
+      },
+      {
+        text: "The capital of France is…",
+        options: ["Madrid", "Berlin", "Paris", "Rome"],
+        answerIndex: 2,
+      },
+      {
+        text: "Which CSS selector targets an element by its id?",
+        options: [".idName", "#idName", "*idName", "id(idName)"],
+        answerIndex: 1,
+      },
+    ];
+
+    /* === App State === */
+    let order = [];
+    let current = 0; // index into 'order'
+    let score = 0;
+    let picked = false;
+
+    /* === Elements === */
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const qCounter = document.getElementById('qCounter');
+    const scoreEl = document.getElementById('score');
+    const quizBody = document.getElementById('quizBody');
+    const progressBar = document.getElementById('progressBar');
+    const live = document.getElementById('live');
+
+    /* === Best score (localStorage) === */
+    const bestScoreEl = document.getElementById('bestScore');
+    const bestBar = document.getElementById('bestBar');
+    const bestMeta = document.getElementById('bestMeta');
+    const resetBest = document.getElementById('resetBest');
+
+    function getBest() {
+      const raw = localStorage.getItem('qq_best');
+      if (!raw) return null;
+      try { return JSON.parse(raw); } catch { return null; }
+    }
+    function setBest(pct, detail) {
+      localStorage.setItem('qq_best', JSON.stringify({ pct, detail, at: Date.now() }));
+      renderBest();
+    }
+    function renderBest() {
+      const b = getBest();
+      if (!b) {
+        bestScoreEl.textContent = '0%';
+        bestBar.style.width = '0%';
+        bestMeta.textContent = 'No attempts yet';
+        return;
+      }
+      bestScoreEl.textContent = `${Math.round(b.pct)}%`;
+      bestBar.style.width = `${Math.round(b.pct)}%`;
+      const d = new Date(b.at);
+      bestMeta.textContent = `Set on ${d.toLocaleDateString()} (${b.detail})`;
+    }
+    resetBest.addEventListener('click', () => { localStorage.removeItem('qq_best'); renderBest(); });
+
+    /* === Utils === */
+    function shuffle(array) {
+      const a = array.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function percent(n, d) { return d === 0 ? 0 : (n / d) * 100; }
+
+    /* === Rendering === */
+    function renderQuestion() {
+      const q = QUESTIONS[ order[current] ];
+      qCounter.textContent = `Question ${current + 1} / ${QUESTIONS.length}`;
+      progressBar.style.width = `${percent(current, QUESTIONS.length)}%`;
+
+      quizBody.innerHTML = '';
+
+      const qEl = document.createElement('p');
+      qEl.className = 'question';
+      qEl.id = 'question-text';
+      qEl.innerHTML = q.text
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      quizBody.appendChild(qEl);
+
+      const list = document.createElement('ul');
+      list.className = 'options';
+
+      const optionOrder = shuffle(q.options.map((_, i) => i));
+
+      optionOrder.forEach((optIndex, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option';
+        btn.type = 'button';
+        btn.dataset.correct = String(optIndex === q.answerIndex);
+        btn.innerHTML = `<span class="kbd" style="margin-right:8px">${idx + 1}</span> ${q.options[optIndex]}`;
+        btn.addEventListener('click', () => selectAnswer(btn));
+        list.appendChild(btn);
+      });
+
+      quizBody.appendChild(list);
+
+      nextBtn.disabled = true;
+      picked = false;
+      live.textContent = '';
+    }
+
+    function selectAnswer(btn) {
+      if (picked) return; // lock after first pick
+      picked = true;
+
+      const correct = btn.dataset.correct === 'true';
+      const all = quizBody.querySelectorAll('.option');
+      all.forEach(b => b.disabled = true);
+
+      if (correct) {
+        btn.classList.add('correct');
+        score++;
+        scoreEl.textContent = String(score);
+        live.textContent = 'Correct!';
+      } else {
+        btn.classList.add('wrong');
+        live.textContent = 'Wrong — look for the green answer.';
+      }
+
+      // highlight the correct one
+      all.forEach(b => {
+        if (b.dataset.correct === 'true') b.classList.add('correct');
+      });
+
+      nextBtn.disabled = false;
+    }
+
+    function renderResult() {
+      const total = QUESTIONS.length;
+      const pct = percent(score, total);
+      progressBar.style.width = '100%';
+      qCounter.textContent = 'Results';
+
+      const msg = pct === 100 ? 'Perfect score! 🎉' : pct >= 70 ? 'Great job!' : pct >= 40 ? 'Nice try — keep practicing!' : 'Tough round — try again!';
+
+      quizBody.innerHTML = `
+        <h2 style="margin: 4px 0 0">${msg}</h2>
+        <p class="muted" style="margin:4px 0 12px">You scored <strong>${score}</strong> out of <strong>${total}</strong> (<strong>${Math.round(pct)}%</strong>).</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="btn-primary" onclick="start(true)">Play again</button>
+          <button class="btn-ghost" onclick="shareScore()">Share score</button>
+        </div>
+      `;
+
+      const currentDetail = `${score}/${total}`;
+      const best = getBest();
+      if (!best || pct > best.pct) setBest(pct, currentDetail);
+    }
+
+    function shareScore() {
+      const total = QUESTIONS.length; const pct = Math.round(percent(score, total));
+      const text = `I scored ${score}/${total} (${pct}%) on Quick Quiz!`;
+      if (navigator.share) {
+        navigator.share({ title: 'Quick Quiz', text });
+      } else {
+        navigator.clipboard.writeText(text).then(() => alert('Score copied to clipboard!'));
+      }
+    }
+
+    /* === Flow === */
+    function start(restart = false) {
+      order = shuffle(QUESTIONS.map((_, i) => i));
+      current = 0;
+      score = 0;
+      scoreEl.textContent = '0';
+      progressBar.style.width = '0%';
+      startBtn.disabled = true;
+      restartBtn.disabled = false;
+      nextBtn.disabled = true;
+      if (!restart) live.textContent = '';
+      renderQuestion();
+    }
+
+    function next() {
+      if (current < QUESTIONS.length - 1) {
+        current += 1;
+        renderQuestion();
+      } else {
+        renderResult();
+      }
+    }
+
+    function restart() {
+      start(true);
+    }
+
+    /* === Events === */
+    startBtn.addEventListener('click', () => start());
+    restartBtn.addEventListener('click', () => restart());
+    nextBtn.addEventListener('click', () => next());
+
+    // Keyboard: 1–4 to pick options, Enter for Next
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (!nextBtn.disabled) nextBtn.click();
+      }
+      const n = Number(e.key);
+      if (!Number.isNaN(n) && n >= 1 && n <= 9) {
+        const btns = quizBody.querySelectorAll('.option');
+        const btn = btns[n - 1];
+        if (btn) btn.click();
+      }
+    });
+
+    // Initial best render
+    renderBest();
+  </script>
+</body>
+</html>
