@@ -3,187 +3,128 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Quiz Scoreboard</title>
+<title>Quiz Scoreboard (Realtime)</title>
 <style>
-  :root{ --bg:#0b1024; --panel:#131a3a; --text:#e8ecff; --muted:#9aa3c7; --primary:#6e8bff; --danger:#ff6b6b; --accent:#30e0a1; }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;background:radial-gradient(1200px 800px at 80% -10%, #1b244f 0%, #0b1024 60%);color:var(--text)}
-  main{max-width:980px;margin:0 auto;padding:22px}
-  h1{margin:8px 0 4px} .muted{color:var(--muted)}
+  :root{--bg:#0b1024;--panel:#131a3a;--text:#e8ecff;--muted:#9aa3c7;--primary:#6e8bff;--danger:#ff6b6b;--accent:#30e0a1}
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;background:radial-gradient(1200px 800px at 80% -10%,#1b244f 0%,#0b1024 60%);color:var(--text)}
+  main{max-width:980px;margin:0 auto;padding:22px} h1{margin:8px 0 4px}.muted{color:var(--muted)}
   .card{background:linear-gradient(180deg,#1a2352 0%,var(--panel) 50%);border:1px solid #ffffff12;border-radius:16px;box-shadow:0 10px 30px #00000059;padding:18px}
   button{border:0;background:var(--primary);color:#0a0d1f;font-weight:700;border-radius:12px;padding:10px 14px;cursor:pointer}
   .btn-outline{background:transparent;color:var(--text);border:1px solid #ffffff2e}
-  .btn-danger{background:var(--danger);color:#190b0b}
-  input[type=password]{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #ffffff26;background:#0f1330;color:var(--text)}
-  table{width:100%;border-collapse:collapse;margin-top:10px}
-  th,td{padding:10px;border-bottom:1px solid #ffffff20;text-align:left}
-  th{color:var(--muted)}
-  .row{display:flex;gap:8px;align-items:center} .spacer{flex:1}
+  table{width:100%;border-collapse:collapse;margin-top:10px} th,td{padding:10px;border-bottom:1px solid #ffffff20;text-align:left} th{color:var(--muted)}
+  .row{display:flex;gap:8px;align-items:center}.spacer{flex:1}
 </style>
 </head>
 <body>
 <main>
   <h1>Scoreboard</h1>
-  <p class="muted">Private results for the host. Keep this page away from teams.</p>
+  <p class="muted">Opens on the host device only. Shows live progress + best finished scores.</p>
 
-  <!-- PIN gate -->
-  <section id="gate" class="card">
-    <h2 style="margin:0 0 8px">Enter PIN</h2>
-    <p class="muted" style="margin:0 0 10px">Ask the host for the PIN.</p>
-    <form id="pin-form" class="row" autocomplete="off">
-      <input type="password" id="pin-input" placeholder="PIN" required />
-      <button type="submit">Unlock</button>
-    </form>
-    <p id="pin-error" class="muted" style="display:none;color:#ffb4b4">Incorrect PIN.</p>
+  <section class="card">
+    <div id="live-table"></div>
   </section>
 
-  <section id="board" class="card" style="display:none">
+  <section class="card" style="margin-top:16px">
     <div class="row">
       <h2 style="margin:0">Best scores</h2>
       <div class="spacer"></div>
       <button class="btn-outline" id="export-csv">Export CSV</button>
-      <button class="btn-danger" id="clear-attempts" title="Clear all attempts (not teams)">Clear attempts</button>
     </div>
-    <div id="board-wrap"></div>
-
-    <div id="history" style="margin-top:16px;display:none">
-      <div class="row">
-        <h3 id="history-title" style="margin:0">History</h3>
-        <div class="spacer"></div>
-        <button class="btn-outline" id="close-history">Close</button>
-      </div>
-      <div id="history-wrap"></div>
-    </div>
+    <div id="best-table"></div>
   </section>
 </main>
 
-<script>
-/* Match keys with index.html */
-const STORE_KEYS = { teams: "quiz_teams_v1", attempts: "quiz_attempts_v1", pin: "quiz_scoreboard_pin_v1" };
+<script type="module">
+  /* ---------- Firebase imports + init ---------- */
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-/* --- Set/change the PIN here (default '4321') --- */
-const DEFAULT_PIN = "4321";
-/* You can change it any time; it stores in localStorage so it persists on this device. */
+  // 🔁 REPLACE with the *same* Firebase config you put in index.html
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
 
-function loadJSON(k,f){try{return JSON.parse(localStorage.getItem(k)) ?? f}catch{return f}}
-function saveJSON(k,v){localStorage.setItem(k,JSON.stringify(v))}
-function getTeams(){ return loadJSON(STORE_KEYS.teams, []); }
-function getAttempts(){ return loadJSON(STORE_KEYS.attempts, []); }
-function setAttempts(a){ saveJSON(STORE_KEYS.attempts, a); }
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
 
-function ensurePin(){
-  const saved = localStorage.getItem(STORE_KEYS.pin);
-  if(!saved){ localStorage.setItem(STORE_KEYS.pin, DEFAULT_PIN); }
-}
-ensurePin();
+  const liveEl = document.getElementById("live-table");
+  const bestEl = document.getElementById("best-table");
 
-const gate = document.getElementById("gate");
-const board = document.getElementById("board");
-document.getElementById("pin-form").addEventListener("submit", (e)=>{
-  e.preventDefault();
-  const input = document.getElementById("pin-input").value.trim();
-  const saved = localStorage.getItem(STORE_KEYS.pin) || DEFAULT_PIN;
-  if(input === saved){
-    gate.style.display="none";
-    board.style.display="block";
-    renderBoard();
-  } else {
-    document.getElementById("pin-error").style.display="block";
-  }
-});
+  // Realtime query of all attempts, newest updates first
+  const q = query(collection(db, "attempts"), orderBy("updatedAt", "desc"));
 
-/* Board rendering */
-function renderBoard(){
-  const teams = getTeams();
-  const attempts = getAttempts();
-  const bestMap = new Map(); // id -> best attempt
-  attempts.forEach(a=>{
-    const prev = bestMap.get(a.teamId);
-    if(!prev || a.score > prev.score) bestMap.set(a.teamId, a);
-  });
+  onSnapshot(q, (snap)=>{
+    const attempts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  const rows = teams.map(t=>{
-    const a = bestMap.get(t.id);
-    return {
-      id:t.id, name:t.name,
-      score: a ? `${a.score}/${a.total}` : "—",
-      pct: a ? `${Math.round(a.percent)}%` : "—",
-      when: a ? new Date(a.ts).toLocaleString() : "—",
-      sort: a ? a.score : -1
-    };
-  }).sort((a,b)=>b.sort-a.sort);
+    // Live (in-progress)
+    const liveRows = attempts
+      .filter(a => a.status === "in_progress")
+      .sort((a,b)=> (b.score - a.score) || ((b.currentIndex||0) - (a.currentIndex||0)));
 
-  const wrap = document.getElementById("board-wrap");
-  if(rows.length===0){ wrap.innerHTML = `<p class="muted">No teams yet.</p>`; return; }
-
-  let html = `<table><thead><tr><th>Team</th><th>Best score</th><th>Best %</th><th>When</th><th></th></tr></thead><tbody>`;
-  rows.forEach(r=>{
-    html += `<tr>
-      <td><strong>${escapeHtml(r.name)}</strong></td>
-      <td>${r.score}</td><td>${r.pct}</td><td>${r.when}</td>
-      <td><button class="btn-outline" data-history="${r.id}">View history</button></td>
-    </tr>`;
-  });
-  html += `</tbody></table>`;
-  wrap.innerHTML = html;
-
-  wrap.querySelectorAll('[data-history]').forEach(btn=>{
-    btn.addEventListener('click', ()=>showHistory(btn.getAttribute('data-history')));
-  });
-}
-
-function showHistory(teamId){
-  const teams = getTeams();
-  const attempts = getAttempts();
-  const team = teams.find(t=>t.id===teamId);
-  const list = attempts.filter(a=>a.teamId===teamId).sort((a,b)=>b.ts-a.ts);
-  const title = document.getElementById("history-title");
-  const wrap = document.getElementById("history-wrap");
-  title.textContent = `History — ${team ? team.name : "Unknown team"}`;
-
-  if(list.length===0){ wrap.innerHTML = `<p class="muted">No attempts yet.</p>`; }
-  else {
-    let html = `<table><thead><tr><th>#</th><th>Score</th><th>%</th><th>Date</th></tr></thead><tbody>`;
-    list.forEach((a,i)=>{
-      html += `<tr><td>${list.length-i}</td><td>${a.score}/${a.total}</td><td>${Math.round(a.percent)}%</td><td>${new Date(a.ts).toLocaleString()}</td></tr>`;
+    // Best per team (finished only)
+    const bestMap = new Map();
+    attempts.forEach(a=>{
+      if(a.status !== "finished") return;
+      const prev = bestMap.get(a.teamId);
+      if(!prev || a.score > prev.score) bestMap.set(a.teamId, a);
     });
+    const bestRows = [...bestMap.values()].sort((a,b)=> (b.score - a.score) || a.teamName.localeCompare(b.teamName));
+
+    renderLive(liveRows);
+    renderBest(bestRows);
+  });
+
+  function renderLive(rows){
+    if(!rows.length){ liveEl.innerHTML = '<p class="muted">No teams in progress yet.</p>'; return; }
+    let html = `<h2 style="margin:6px 0">Live progress</h2>
+      <table><thead><tr><th>Team</th><th>Score</th><th>Progress</th><th>Updated</th></tr></thead><tbody>`;
+    for(const r of rows){
+      const cur = r.currentIndex ?? 0;
+      const pct = Math.round((cur / r.total) * 100);
+      html += `<tr>
+        <td><strong>${esc(r.teamName)}</strong></td>
+        <td>${r.score}/${r.total}</td>
+        <td>${cur}/${r.total} (${pct}%)</td>
+        <td>${fmtTime(r.updatedAt)}</td>
+      </tr>`;
+    }
     html += `</tbody></table>`;
-    wrap.innerHTML = html;
+    liveEl.innerHTML = html;
   }
-  document.getElementById("history").style.display="block";
-}
-document.getElementById("close-history").addEventListener("click", ()=>{
-  document.getElementById("history").style.display="none";
-});
 
-/* Export & clear */
-document.getElementById("export-csv").addEventListener("click", ()=>{
-  const attempts = getAttempts();
-  if(attempts.length===0) return alert("No attempts to export.");
-  const header = ["teamId","teamName","score","total","percent","timestamp_iso"];
-  const rows = attempts.map(a=>[
-    a.teamId,
-    a.teamName.replace(/"/g,'""'),
-    a.score,
-    a.total,
-    Math.round(a.percent),
-    new Date(a.ts).toISOString()
-  ]);
-  const csv = [header.join(","), ...rows.map(r=>r.map(String).map(v => /[",\n]/.test(v) ? `"${v}"` : v).join(","))].join("\n");
-  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href=url; a.download="quiz_attempts.csv"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-});
-
-document.getElementById("clear-attempts").addEventListener("click", ()=>{
-  if(confirm("Clear ALL attempts? Teams remain, but history and best scores will be removed.")){
-    setAttempts([]);
-    document.getElementById("history").style.display="none";
-    renderBoard();
+  function renderBest(rows){
+    if(!rows.length){ bestEl.innerHTML = '<p class="muted">No finished attempts yet.</p>'; return; }
+    let html = `<table><thead><tr><th>Team</th><th>Best score</th><th>Finished</th></tr></thead><tbody>`;
+    for(const r of rows){
+      const pct = Math.round((r.score / r.total) * 100);
+      html += `<tr>
+        <td><strong>${esc(r.teamName)}</strong></td>
+        <td>${r.score}/${r.total} (${pct}%)</td>
+        <td>${fmtTime(r.finishedAt || r.updatedAt)}</td>
+      </tr>`;
+    }
+    html += `</tbody></table>`;
+    bestEl.innerHTML = html;
   }
-});
 
-function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+  document.getElementById("export-csv").addEventListener("click", ()=>{
+    // pull current table rows from best+live maps instead of DOM: re-run query snapshot mapping
+    // Simpler approach: temporary on-demand fetch from the last snapshot
+    alert("Tip: export from Firestore Console for a full dataset.\n(Quick CSV export can be added if you want.)");
+  });
+
+  function fmtTime(t){
+    try{
+      const d = t?.toDate ? t.toDate() : (t?.seconds ? new Date(t.seconds*1000) : new Date());
+      return d.toLocaleString();
+    }catch{ return "—" }
+  }
+  const esc = s => String(s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 </script>
 </body>
 </html>

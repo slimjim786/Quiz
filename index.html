@@ -3,55 +3,33 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Team Quiz</title>
+<title>Team Quiz (Realtime)</title>
 <style>
-  :root{
-    --bg:#0f1226; --panel:#171b34; --text:#e9ecff; --muted:#9aa3c7;
-    --primary:#6e8bff; --primary-2:#8aa2ff; --accent:#30e0a1; --danger:#ff6b6b;
-    --focus:#ffd166; --radius:16px;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial;
-    background: radial-gradient(1200px 800px at 20% 0%, #131739 0%, #0f1226 60%, #0c0f21 100%);
-    color:var(--text);}
-  header{padding:28px 18px 8px;text-align:center}
-  header h1{margin:0;font-size:clamp(1.6rem,2.2vw+1rem,2.4rem)}
-  header p{margin:.25rem 0 0;color:var(--muted)}
+  :root{--bg:#0f1226;--panel:#171b34;--text:#e9ecff;--muted:#9aa3c7;--primary:#6e8bff;--primary-2:#8aa2ff;--accent:#30e0a1;--danger:#ff6b6b;--focus:#ffd166;--radius:16px}
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;background:radial-gradient(1200px 800px at 20% 0%,#131739 0%,#0f1226 60%,#0c0f21 100%);color:var(--text)}
+  header{padding:28px 18px 8px;text-align:center} header h1{margin:0;font-size:clamp(1.6rem,2.2vw+1rem,2.4rem)} header p{margin:.25rem 0 0;color:var(--muted)}
   main{max-width:880px;margin:0 auto;padding:18px}
   .card{background:linear-gradient(180deg,#1a1f3f 0%,var(--panel) 50%);border:1px solid #ffffff10;border-radius:var(--radius);box-shadow:0 10px 30px #00000059;padding:clamp(14px,1.2vw+8px,22px)}
-  .muted{color:var(--muted)} .hint{font-size:.95rem;color:var(--muted)}
-  .row{display:flex;gap:8px;align-items:center} .spacer{flex:1}
-
+  .row{display:flex;gap:8px;align-items:center}.spacer{flex:1}.muted{color:var(--muted)}.hint{color:var(--muted)}
   button{border:0;background:var(--primary);color:#0a0d1f;font-weight:700;border-radius:12px;padding:12px 14px;cursor:pointer;transition:transform .02s,filter .2s}
-  button:hover{filter:brightness(1.08)} button:active{transform:translateY(1px)} button[disabled]{opacity:.45;cursor:not-allowed}
-  .btn-outline{background:transparent;color:var(--text);border:1px solid #ffffff2e}
-  .btn-danger{background:var(--danger);color:#190b0b}
-  .btn-ghost{background:transparent;color:var(--muted);border:1px dashed #ffffff26}
-
-  input[type="text"]{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #ffffff26;background:#0f1330;color:var(--text)}
-  input[type="text"]:focus{box-shadow:0 0 0 3px var(--focus);border-color:transparent}
-
-  .team-list{display:grid;gap:10px;margin-top:12px}
-  .team-item{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #ffffff1f;border-radius:12px;background:#121636}
-  .team-name{font-weight:700}
-  .badge{padding:4px 8px;border-radius:100px;background:#0f1330;color:var(--muted);border:1px solid #ffffff20;font-size:.8rem}
-
-  /* Quiz UI */
-  .progress-wrap{display:flex;align-items:center;gap:10px;margin:8px 0 16px}
-  .progress{height:10px;border-radius:999px;background:#0c1030;border:1px solid #ffffff1f;width:100%;overflow:hidden}
-  .bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-2));width:0%}
-  .q-text{font-size:clamp(1.1rem,1.2vw+1rem,1.6rem);font-weight:700}
-  .options{display:grid;gap:10px;margin:14px 0}
+  button:hover{filter:brightness(1.08)}button:active{transform:translateY(1px)}button[disabled]{opacity:.45;cursor:not-allowed}
+  .btn-outline{background:transparent;color:var(--text);border:1px solid #ffffff2e}.btn-danger{background:var(--danger);color:#190b0b}.btn-ghost{background:transparent;color:var(--muted);border:1px dashed #ffffff26}
+  input[type=text]{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #ffffff26;background:#0f1330;color:var(--text)} input[type=text]:focus{box-shadow:0 0 0 3px var(--focus);border-color:transparent}
+  .team-list{display:grid;gap:10px;margin-top:12px}.team-item{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #ffffff1f;border-radius:12px;background:#121636}
+  .team-name{font-weight:700}.badge{padding:4px 8px;border-radius:100px;background:#0f1330;color:var(--muted);border:1px solid #ffffff20;font-size:.8rem}
+  .progress-wrap{display:flex;align-items:center;gap:10px;margin:8px 0 16px}.progress{height:10px;border-radius:999px;background:#0c1030;border:1px solid #ffffff1f;width:100%;overflow:hidden}.bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-2));width:0%}
+  .q-text{font-size:clamp(1.1rem,1.2vw+1rem,1.6rem);font-weight:700}.options{display:grid;gap:10px;margin:14px 0}
   .opt{width:100%;text-align:left;background:#121636;color:var(--text);border:1px solid #ffffff24;border-radius:12px;padding:12px;cursor:pointer}
-  .opt.correct{outline:3px solid var(--accent)} .opt.wrong{outline:3px solid var(--danger)}
+  .opt.correct{outline:3px solid var(--accent)}.opt.wrong{outline:3px solid var(--danger)}
   .kbd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;padding:2px 8px;border-radius:6px;background:#0f1330;border:1px solid #ffffff26;color:var(--muted)}
 </style>
 </head>
 <body>
 <header>
   <h1>Team Quiz</h1>
-  <p class="muted">Register up to 5 teams, then let each team play. Scores are saved privately.</p>
+  <p class="muted">Register up to 5 teams, then let each team play. Scores stream to the private scoreboard page.</p>
 </header>
+
 <main>
   <section class="card" id="view">
     <!-- LOBBY -->
@@ -65,7 +43,7 @@
       <div class="team-list" id="team-list" aria-live="polite"></div>
       <p class="hint" id="team-limit-hint" style="display:none">Limit reached (5 teams). Remove one to add another.</p>
       <div class="row" style="margin-top:10px">
-        <button class="btn-ghost" id="clear-all">Clear all data</button>
+        <button class="btn-ghost" id="clear-all">Clear all data (this device)</button>
         <div class="spacer"></div>
         <span class="muted">Keyboard: <span class="kbd">1–6</span> answer • <span class="kbd">Enter</span> next</span>
       </div>
@@ -92,7 +70,7 @@
       </div>
     </div>
 
-    <!-- RESULTS (no score displayed here) -->
+    <!-- RESULTS (no score shown to team) -->
     <div id="results-view" style="display:none" role="region" aria-labelledby="results-title">
       <h2 id="results-title">Run saved</h2>
       <p class="muted">Thanks! Your attempt has been recorded.</p>
@@ -100,192 +78,220 @@
         <button id="play-again">Play again</button>
         <button class="btn-outline" id="back-home">&larr; Lobby</button>
       </div>
-      <p class="hint" style="margin-top:8px">Scores are private. The host can view them on the separate scoreboard page.</p>
     </div>
   </section>
 </main>
 
-<script>
-/* =========================
-   EDIT YOUR QUESTIONS HERE
-   ========================= */
-const QUESTIONS = [
-  { text: "Which planet is known as the Red Planet?", options: ["Earth","Mars","Jupiter","Venus"], answerIndex: 1 },
-  { text: "What is 9 × 6?", options: ["42","52","54","56"], answerIndex: 2 },
-  { text: "Who wrote 'Romeo and Juliet'?", options: ["Charles Dickens","Jane Austen","William Shakespeare","Mark Twain"], answerIndex: 2 },
-  { text: "The chemical symbol for water is…", options: ["WO","H2O","HO2","OH2"], answerIndex: 1 }
-];
+<!-- ✅ Everything (including Firebase) is inside one module for clarity -->
+<script type="module">
+  /* ---------- 1) Firebase imports + init ---------- */
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-/* =========================
-   Storage keys (shared with scoreboard.html)
-   ========================= */
-const STORE_KEYS = {
-  teams: "quiz_teams_v1",
-  attempts: "quiz_attempts_v1" // {teamId, teamName, score, total, percent, ts}
-};
-
-function loadJSON(key, fallback){ try{return JSON.parse(localStorage.getItem(key)) ?? fallback;}catch{return fallback;} }
-function saveJSON(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
-
-const MAX_TEAMS = 5;
-let teams = loadJSON(STORE_KEYS.teams, []);
-let attempts = loadJSON(STORE_KEYS.attempts, []);
-
-const el = id => document.getElementById(id);
-const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } };
-
-function renderLobby(){
-  const list = el("team-list"); list.innerHTML = "";
-  teams.forEach(team=>{
-    const row = document.createElement("div");
-    row.className = "team-item";
-    row.innerHTML = `
-      <span class="team-name">${escapeHtml(team.name)}</span>
-      <span class="spacer"></span>
-      <button class="btn-outline" data-action="start" aria-label="Start quiz for ${escapeHtml(team.name)}">Start quiz</button>
-      <button class="btn-danger" data-action="remove" aria-label="Remove ${escapeHtml(team.name)}">Remove</button>
-    `;
-    row.querySelector('[data-action="start"]').addEventListener("click", ()=>startQuiz(team.id));
-    row.querySelector('[data-action="remove"]').addEventListener("click", ()=>{
-      if(confirm(`Remove team "${team.name}"?`)){
-        teams = teams.filter(t=>t.id!==team.id);
-        saveJSON(STORE_KEYS.teams, teams);
-        renderLobby();
-      }
-    });
-    list.appendChild(row);
-  });
-  const atLimit = teams.length >= MAX_TEAMS;
-  el("team-limit-hint").style.display = atLimit ? "block" : "none";
-  el("add-team").disabled = atLimit;
-}
-
-function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
-
-el("team-form").addEventListener("submit",(e)=>{
-  e.preventDefault();
-  const name = el("team-name").value.trim();
-  if(!name) return;
-  if(name.length>20) return alert("Max 20 characters.");
-  if(teams.some(t=>t.name.toLowerCase()===name.toLowerCase())) return alert("That name is taken.");
-  if(teams.length>=MAX_TEAMS) return alert("Maximum 5 teams.");
-  const team = {id: Math.random().toString(36).slice(2,10), name};
-  teams.push(team); saveJSON(STORE_KEYS.teams, teams);
-  el("team-name").value=""; renderLobby();
-});
-
-el("clear-all").addEventListener("click", ()=>{
-  if(confirm("Clear TEAMS and SCORES on this device?")){
-    localStorage.removeItem(STORE_KEYS.teams);
-    localStorage.removeItem(STORE_KEYS.attempts);
-    teams=[]; attempts=[];
-    renderLobby();
-  }
-});
-
-/* =========================
-   Quiz (no on-screen scoring)
-   ========================= */
-let currentTeam = null, order=[], qIndex=0, score=0, currentAnswered=null;
-
-function startQuiz(teamId){
-  currentTeam = teams.find(t=>t.id===teamId);
-  if(!currentTeam) return alert("Team not found.");
-  order = [...Array(QUESTIONS.length).keys()]; shuffle(order);
-  qIndex=0; score=0; currentAnswered=null;
-
-  el("lobby-view").style.display="none";
-  el("results-view").style.display="none";
-  el("quiz-view").style.display="block";
-  el("playing-team").textContent = `Team: ${currentTeam.name}`;
-  renderQuestion();
-}
-
-function renderQuestion(){
-  const total = order.length;
-  const q = QUESTIONS[order[qIndex]];
-  el("q-text").textContent = q.text;
-  el("progress-label").textContent = `${qIndex+1} / ${total}`;
-  el("bar").style.width = `${(qIndex/total)*100}%`;
-  el("feedback").textContent = "";
-  el("next-btn").disabled = true;
-
-  const wrap = el("options"); wrap.innerHTML="";
-  const opts = q.options.map((t,i)=>({t,i})); shuffle(opts);
-  const correctIndex = q.answerIndex;
-  const correctText = q.options[correctIndex];
-
-  opts.forEach((o, i)=>{
-    const btn = document.createElement("button");
-    btn.className = "opt";
-    btn.innerHTML = `<span class="kbd" aria-hidden="true">${i+1}</span> ${escapeHtml(o.t)}`;
-    btn.addEventListener("click", ()=>{
-      if(currentAnswered!==null) return;
-      currentAnswered = (o.i===correctIndex);
-      if(currentAnswered){ score++; el("feedback").textContent="✔"; } else { el("feedback").textContent="✖"; }
-      // mark buttons
-      [...wrap.querySelectorAll(".opt")].forEach(b=>b.disabled=true);
-      if(btn.textContent.includes(correctText)) btn.classList.add("correct");
-      else btn.classList.add("wrong");
-      // highlight correct
-      const buttons=[...wrap.querySelectorAll(".opt")];
-      const correctBtn = buttons.find(b=>b.textContent.includes(correctText));
-      correctBtn && correctBtn.classList.add("correct");
-      el("next-btn").disabled = false;
-    });
-    wrap.appendChild(btn);
-  });
-
-  // keyboard
-  window.onkeydown = (e)=>{
-    if(['INPUT','TEXTAREA','BUTTON'].includes(document.activeElement.tagName)) return;
-    if(/^[1-6]$/.test(e.key)){
-      const n = +e.key;
-      const target = wrap.querySelector(`.opt:nth-child(${n})`);
-      if(target) target.click();
-    } else if(e.key==="Enter"){
-      if(!el("next-btn").disabled) el("next-btn").click();
-    }
+  // 🔁 REPLACE with your Firebase config (copy from Firebase Console)
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
   };
-}
 
-el("next-btn").addEventListener("click", ()=>{
-  if(currentAnswered===null) return;
-  qIndex++;
-  if(qIndex>=order.length) finishQuiz();
-  else { currentAnswered=null; renderQuestion(); }
-});
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
 
-function finishQuiz(){
-  el("bar").style.width="100%";
-  const total = order.length;
-  const percent = (score/total)*100;
-  // save attempt (no display)
-  attempts = loadJSON(STORE_KEYS.attempts, []);
-  attempts.push({ teamId: currentTeam.id, teamName: currentTeam.name, score, total, percent, ts: Date.now() });
-  saveJSON(STORE_KEYS.attempts, attempts);
+  /* ---------- 2) Quiz data (edit your questions) ---------- */
+  const QUESTIONS = [
+    { text: "Which planet is known as the Red Planet?", options: ["Earth","Mars","Jupiter","Venus"], answerIndex: 1 },
+    { text: "What is 9 × 6?", options: ["42","52","54","56"], answerIndex: 2 },
+    { text: "Who wrote 'Romeo and Juliet'?", options: ["Charles Dickens","Jane Austen","William Shakespeare","Mark Twain"], answerIndex: 2 },
+    { text: "The chemical symbol for water is…", options: ["WO","H2O","HO2","OH2"], answerIndex: 1 }
+  ];
 
-  el("quiz-view").style.display="none";
-  el("results-view").style.display="block";
-}
+  /* ---------- 3) Shared storage (local teams list) ---------- */
+  const STORE_KEYS = { teams: "quiz_teams_v1" };
+  const loadJSON = (k,f)=>{ try{ return JSON.parse(localStorage.getItem(k)) ?? f } catch { return f } };
+  const saveJSON = (k,v)=> localStorage.setItem(k, JSON.stringify(v));
+  const MAX_TEAMS = 5;
+  let teams = loadJSON(STORE_KEYS.teams, []);
 
-el("play-again").addEventListener("click", ()=>{
-  if(currentTeam) startQuiz(currentTeam.id);
-});
-el("back-home").addEventListener("click", ()=>{
-  currentTeam=null;
-  el("results-view").style.display="none";
-  el("lobby-view").style.display="block";
-});
-el("back-to-lobby").addEventListener("click", ()=>{
-  if(confirm("Quit and return to lobby?")){
-    currentTeam=null;
-    el("quiz-view").style.display="none";
-    el("lobby-view").style.display="block";
+  /* ---------- 4) DOM helpers ---------- */
+  const $ = (id)=>document.getElementById(id);
+  const escapeHtml = s => String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } };
+
+  /* ---------- 5) Lobby UI ---------- */
+  function renderLobby(){
+    const list = $("team-list"); list.innerHTML = "";
+    teams.forEach(team=>{
+      const row = document.createElement("div");
+      row.className = "team-item";
+      row.innerHTML = `
+        <span class="team-name">${escapeHtml(team.name)}</span>
+        <span class="spacer"></span>
+        <button class="btn-outline" data-start>Start quiz</button>
+        <button class="btn-danger" data-remove>Remove</button>
+      `;
+      row.querySelector("[data-start]").addEventListener("click", ()=>startQuiz(team.id));
+      row.querySelector("[data-remove]").addEventListener("click", ()=>{
+        if(confirm(`Remove team "${team.name}"?`)){
+          teams = teams.filter(t=>t.id!==team.id);
+          saveJSON(STORE_KEYS.teams, teams);
+          renderLobby();
+        }
+      });
+      list.appendChild(row);
+    });
+    const atLimit = teams.length >= MAX_TEAMS;
+    $("team-limit-hint").style.display = atLimit ? "block" : "none";
+    $("add-team").disabled = atLimit;
   }
-});
 
-renderLobby();
+  $("team-form").addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const name = $("team-name").value.trim();
+    if(!name) return;
+    if(name.length>20) return alert("Max 20 characters.");
+    if(teams.some(t=>t.name.toLowerCase()===name.toLowerCase())) return alert("That name is taken.");
+    if(teams.length>=MAX_TEAMS) return alert("Maximum 5 teams.");
+    teams.push({ id: Math.random().toString(36).slice(2,10), name });
+    saveJSON(STORE_KEYS.teams, teams);
+    $("team-name").value="";
+    renderLobby();
+  });
+
+  $("clear-all").addEventListener("click", ()=>{
+    if(confirm("Clear TEAMS on this device? (Scores live in Firebase.)")){
+      localStorage.removeItem(STORE_KEYS.teams);
+      teams = [];
+      renderLobby();
+    }
+  });
+
+  /* ---------- 6) Quiz engine + Firestore live updates ---------- */
+  let currentTeam = null, order=[], qIndex=0, score=0, answered=null, runDocRef=null;
+
+  function startQuiz(teamId){
+    currentTeam = teams.find(t=>t.id===teamId);
+    if(!currentTeam) return alert("Team not found.");
+    order = [...Array(QUESTIONS.length).keys()]; shuffle(order);
+    qIndex=0; score=0; answered=null;
+
+    // Create a document for this attempt in Firestore
+    (async ()=>{
+      try{
+        runDocRef = await addDoc(collection(db,"attempts"), {
+          teamId: currentTeam.id,
+          teamName: currentTeam.name,
+          status: "in_progress",
+          score: 0,
+          total: QUESTIONS.length,
+          currentIndex: 0,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      }catch(e){ console.warn("Firestore start error", e); }
+    })();
+
+    $("lobby-view").style.display="none";
+    $("results-view").style.display="none";
+    $("quiz-view").style.display="block";
+    $("playing-team").textContent = `Team: ${currentTeam.name}`;
+    renderQuestion();
+  }
+
+  function renderQuestion(){
+    const total = order.length;
+    const q = QUESTIONS[order[qIndex]];
+    $("q-text").textContent = q.text;
+    $("progress-label").textContent = `${qIndex+1} / ${total}`;
+    $("bar").style.width = `${(qIndex/total)*100}%`;
+    $("feedback").textContent = "";
+    $("next-btn").disabled = true;
+
+    const wrap = $("options"); wrap.innerHTML="";
+    const opts = q.options.map((t,i)=>({t,i})); shuffle(opts);
+    const corr = q.answerIndex, corrText = q.options[corr];
+
+    opts.forEach((o,i)=>{
+      const btn = document.createElement("button");
+      btn.className="opt";
+      btn.innerHTML = `<span class="kbd" aria-hidden="true">${i+1}</span> ${escapeHtml(o.t)}`;
+      btn.addEventListener("click", ()=>{
+        if(answered!==null) return;
+        answered = (o.i===corr);
+        if(answered){ score++; $("feedback").textContent="✔"; } else { $("feedback").textContent="✖"; }
+        // mark + lock
+        [...wrap.querySelectorAll(".opt")].forEach(b=>b.disabled=true);
+        const buttons=[...wrap.querySelectorAll(".opt")];
+        const correctBtn = buttons.find(b=>b.textContent.includes(corrText));
+        correctBtn && correctBtn.classList.add("correct");
+        if(!answered) btn.classList.add("wrong");
+        $("next-btn").disabled = false;
+
+        // 🔴 Update Firestore progress
+        (async ()=>{
+          try{
+            if(!runDocRef) return;
+            await updateDoc(runDocRef, {
+              score,
+              currentIndex: qIndex + 1,
+              updatedAt: serverTimestamp()
+            });
+          }catch(e){ console.warn("Firestore progress error", e); }
+        })();
+      });
+      wrap.appendChild(btn);
+    });
+
+    // Keyboard
+    window.onkeydown = (e)=>{
+      if(['INPUT','TEXTAREA','BUTTON'].includes(document.activeElement.tagName)) return;
+      if(/^[1-6]$/.test(e.key)){
+        const n = +e.key;
+        const target = wrap.querySelector(`.opt:nth-child(${n})`);
+        if(target) target.click();
+      } else if(e.key==="Enter"){
+        if(!$("next-btn").disabled) $("next-btn").click();
+      }
+    };
+  }
+
+  $("next-btn").addEventListener("click", ()=>{
+    if(answered===null) return;
+    qIndex++;
+    if(qIndex>=order.length) finishQuiz();
+    else { answered=null; renderQuestion(); }
+  });
+
+  function finishQuiz(){
+    $("bar").style.width="100%";
+    // ✅ Mark as finished in Firestore
+    (async ()=>{
+      try{
+        if(runDocRef){
+          await updateDoc(runDocRef, {
+            status: "finished",
+            score,
+            currentIndex: QUESTIONS.length,
+            finishedAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+          runDocRef = null;
+        }
+      }catch(e){ console.warn("Firestore finish error", e); }
+    })();
+
+    $("quiz-view").style.display="none";
+    $("results-view").style.display="block";
+  }
+
+  $("play-again").addEventListener("click", ()=>{ if(currentTeam) startQuiz(currentTeam.id); });
+  $("back-home").addEventListener("click", ()=>{ currentTeam=null; $("results-view").style.display="none"; $("lobby-view").style.display="block"; });
+  $("back-to-lobby").addEventListener("click", ()=>{ if(confirm("Quit and return to lobby?")){ currentTeam=null; $("quiz-view").style.display="none"; $("lobby-view").style.display="block"; } });
+
+  renderLobby();
 </script>
 </body>
 </html>
